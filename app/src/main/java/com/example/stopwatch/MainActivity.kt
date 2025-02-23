@@ -2,18 +2,19 @@ package com.example.stopwatch
 
 import android.os.Bundle
 import android.os.SystemClock
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.util.Log
-//import android.widget.Button
-//import android.widget.Chronometer
 import androidx.appcompat.app.AppCompatActivity
 import com.example.stopwatch.databinding.ActivityMainBinding
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
-//    lateinit var stopwatch: Chronometer
     var running = false
     var offset: Long = 0
+    private val lapTimes = mutableListOf<String>()
 
     val OFFSET_KEY = "offset"
     val RUNNING_KEY = "running"
@@ -23,14 +24,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_main)
-
         Log.d(stopWatchTag, "onCreate called")
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-
-//        stopwatch = findViewById<Chronometer>(R.id.stopwatch)
 
         if (savedInstanceState != null) {
             offset = savedInstanceState.getLong(OFFSET_KEY)
@@ -41,7 +38,6 @@ class MainActivity : AppCompatActivity() {
             } else setBaseTime()
         }
 
-//        val startButton = findViewById<Button>(R.id.start_button)
         binding.startButton.setOnClickListener {
             if (!running) {
                 setBaseTime()
@@ -50,7 +46,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        val pauseButton = findViewById<Button>(R.id.pause_button)
         binding.pauseButton.setOnClickListener {
             if (running) {
                 saveOffset()
@@ -59,33 +54,36 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        val resetButton = findViewById<Button>(R.id.reset_button)
         binding.resetButton.setOnClickListener {
             offset = 0
             setBaseTime()
+            binding.stopwatch.stop()
+            running = false
+            binding.lapTimes.text = ""
+        }
+
+
+        binding.lapButton.setOnClickListener {
+            if (running) {
+                val lapTime = formatTime(SystemClock.elapsedRealtime() - binding.stopwatch.base)
+                lapTimes.add(0, lapTime)
+                updateLapTimes()
+            }
         }
     }
 
-    //    override fun onStop() {
-//        super.onStop()
     override fun onPause() {
         super.onPause()
-
         Log.d(stopWatchTag, "onPause called")
-
         if (running) {
             saveOffset()
             binding.stopwatch.stop()
         }
     }
 
-    //    override fun onRestart() {
-//        super.onRestart()
     override fun onResume() {
         super.onResume()
-
         Log.d(stopWatchTag, "onResume called")
-
         if (running) {
             setBaseTime()
             binding.stopwatch.start()
@@ -106,5 +104,30 @@ class MainActivity : AppCompatActivity() {
 
     fun saveOffset() {
         offset = SystemClock.elapsedRealtime() - binding.stopwatch.base
+    }
+
+    private fun formatTime(ms: Long): String {
+        val seconds = (ms / 1000) % 60
+        val minutes = (ms / (1000 * 60)) % 60
+        val hours = (ms / (1000 * 60 * 60)) % 24
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
+
+    private fun updateLapTimes() {
+        val lapTimesText = lapTimes.joinToString("\n") { it }
+        val spannableText = SpannableString(lapTimesText)
+        val lastLapIndex = 0
+        val lastLap = lapTimes[lastLapIndex]
+        val start = lapTimesText.indexOf(lastLap)
+        val end = start + lastLap.length
+
+        spannableText.setSpan(
+            ForegroundColorSpan(getColor(android.R.color.holo_green_light)),
+            start,
+            end,
+            SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        binding.lapTimes.text = spannableText
     }
 }
