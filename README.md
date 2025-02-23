@@ -1,7 +1,7 @@
 # Лабораторная работа №2
 Выполнил - Афанасьев Павел
 
-[BeerAdviser](https://github.com/ISTU-PO-ANDROID/Stopwatch/tree/viewBinding) - исходник
+[StopWatch](https://github.com/ISTU-PO-ANDROID/Stopwatch/tree/viewBinding) - исходник
 
 ## Добавленный функционал
 
